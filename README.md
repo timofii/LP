@@ -5,5 +5,5 @@ Go to and install:
 Compile the project:
 - g++ lp2.cpp -std=c++11 -lqif -larmadillo -lglpk -o lp
 
-Run 
+Run: 
 - ./lp

@@ -16,6 +16,7 @@ struct point2 {
 		int y;
 		};
 
+static double Pi[n];
 static point2 listOfPoints[n];
 
 static list<ME> entries; 
@@ -28,6 +29,15 @@ double distance(point2 i, point2 j){
 
 }
 
+void initPriors(){
+    cout<< "Priors:" << endl;
+    for(int i = 0; i< n; i++)
+    {
+        Pi[i] = 1.0/n;
+        cout<< Pi[i] << endl;
+    }
+
+}
 
 void initSetOfLocations(){
 
@@ -62,7 +72,7 @@ void assignVariables(){
 	for(int i = 0; i < n; i++){
 		for(int j = 0; j < n; j++){
 
-			lp.c(n*i + j) = 1;
+			lp.c(n*i + j) = Pi[i] * distance(listOfPoints[i],listOfPoints[j]);
 			entries.push_back(ME( n3 ,(n*i) + j, 1));
 			for(int k = 0; k < n; k++){
 				if(i!=k){
@@ -93,6 +103,8 @@ bool solved = lp.solve();
 cout << lp.A << endl;
 cout << lp.status << endl;
 cout << "Solve:" << solved << endl;
+    cout << endl;
+    cout << lp.x;
 
 }
 
@@ -102,6 +114,7 @@ int main() {
 cout<<"Launching function main"<<endl;
 
 initSetOfLocations();
+initPriors();
 assignVariables();
 solve();
 

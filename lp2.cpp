@@ -3,11 +3,12 @@
 #include <iostream>
 #include <math.h>
 #include <list>
+#include <time.h>
 
 using namespace qif;
 using namespace std;
 
-const static int n = 4;
+const static int n = 81;
 
 typedef qif::MatrixEntry<double> ME;
 
@@ -30,11 +31,11 @@ double distance(point2 i, point2 j){
 }
 
 void initPriors(){
-    cout<< "Priors:" << endl;
+//    cout<< "Priors:" << endl;
     for(int i = 0; i< n; i++)
     {
         Pi[i] = 1.0/n;
-        cout<< Pi[i] << endl;
+//        cout<< Pi[i] << endl;
     }
 
 }
@@ -43,12 +44,14 @@ void initSetOfLocations(){
 
 //The size of a grid
 int size = sqrt(n);
-cout << size << endl;
+//cout << "SIZE: " << size << ",
+cout << "NUMBER OF POINTS:" << n << endl;
+    
 	for(int i = 0; i < size; i++){
 		for(int j = 0; j < size; j++){
 			listOfPoints[(size*i) + j].x = i;
 			listOfPoints[(size*i) + j].y = j;
-			cout <<listOfPoints[(size*i) + j].x<<" "<<listOfPoints[(size*i) + j].y<< endl; 
+			//cout << listOfPoints[(size*i) + j].x << " " << listOfPoints[(size*i) + j].y << endl;
 		}
 	}
 
@@ -57,68 +60,101 @@ cout << size << endl;
 
 void assignVariables(){
 
+  int counter = 0;
   int n2 = n*n;
   int n3 = n2*n;
 
-  lp.c.set_size(n2);
-  lp.b.set_size(n3 + 1);  
-  lp.sense.set_size(n3 + 1);
-/*
-  point2 p1, p2; //, p3;
-  p1.x=0; p2.x=3; //p3.x=4;
-  p1.y=0; p2.y=4; //p3.y=3;
-  listOfPoints[0]=p1; listOfPoints[1]=p2;// listOfPoints[2]=p3;
-*/
+    
+    lp.c.set_size(n2);
+    lp.b.set_size(n3 + n);
+    lp.sense.set_size(n3 + n);
+    
 	for(int i = 0; i < n; i++){
 		for(int j = 0; j < n; j++){
 
-			lp.c(n*i + j) = Pi[i] * distance(listOfPoints[i],listOfPoints[j]);
-			entries.push_back(ME( n3 ,(n*i) + j, 1));
+            lp.c(n*i + j) = Pi[i] * distance(listOfPoints[i],listOfPoints[j]);
+            //cout << "vvvv:" << Pi[i] * distance(listOfPoints[i],listOfPoints[j]) << " :: "<<n*i + j<< endl;
+			//entries.push_back(ME( n3 ,(n*i) + j, 1));
 			for(int k = 0; k < n; k++){
-				if(i!=k){
+                
+                if(i!=k){
+                    counter++;
 					entries.push_back(ME((n2*k) + (n*i) + j, (n*i) + j, 1));
 					entries.push_back(ME((n2*k) + (n*i) + j, (n*k) + j, -exp(distance(listOfPoints[i],listOfPoints[k]))));
-				}	
-				lp.sense((n2*k)+ (n*i) + j) = '<';
-				lp.b((n2*k)+ (n*i) + j) = 0;
-			
+                    
+                    lp.sense((n2*k)+ (n*i) + j) = '<';
+                    lp.b((n2*k)+ (n*i) + j) = 0;
+                }
+                else
+                {
+                    counter++;
+                    entries.push_back(ME((n2*k) + (n*i) + j, (n*i) + j, 0));
+                    lp.sense((n2*k)+ (n*i) + j) = '=';
+                    lp.b((n2*k)+ (n*i) + j) = 0;
+                }
 			}
 			
 		}
 	}
+    
+    for ( int i = n3; i < n3 + n ; i++) {
+        counter++;
+        for (int j = 0; j < n; ++j) {
+            entries.push_back(ME( i , (n * (i - n3)) + j , 1));
+        }
+        lp.b(i) = 1;
+        lp.sense(i) = '=';
+    }
  
-  lp.b(n3) = 1;
-  lp.sense(n3) = '=';
-
-  lp.fill_A(entries);
+    cout << "NUMBER OF CONSTRAINTS: " << counter<< endl;
+    cout << "VARIABLES: " << n2 << endl;
+    lp.fill_A(entries);
 
 }
 
 
 void solve(){
 
-lp.method = LinearProgram<double>::method_t::simplex_primal;
-bool solved = lp.solve();
+    lp.maximize = false;
+    // methods: simplex_primal, simplex_dual, interior
+    lp.method = LinearProgram<double>::method_t::simplex_primal;
+    cout <<" Method: "<< "simplex_primal" << endl;
+    
+    cout <<" A.n_rows: "<< lp.A.n_rows << endl;
+    cout <<" b.n_elem: "<< lp.b.n_elem << endl;
+    cout <<" sense.n_elem: "<< lp.sense.n_elem << endl;
+    cout <<" A.n_cols: "<< lp.A.n_cols << endl;
+    cout <<" c.n_elem: "<< lp.c.n_elem << endl;
+    
 
-cout << lp.A << endl;
-cout << lp.status << endl;
-cout << "Solve:" << solved << endl;
-    cout << endl;
-    cout << lp.x;
+    clock_t tStart = clock();
+    bool solved = lp.solve();
+    printf(" Time: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
+    cout <<" Solved: " << solved << endl;
+    cout <<" Status: "<< lp.status << endl;
+    cout <<" lp.x.n_elem: "<< lp.x.n_elem <<endl;
+    //cout << lp.A << endl;
+    //cout << "Solve:" << solved << endl;
+    //cout << endl;
+    
+    //cout <<" lp.x.at(5):"<< lp.x.at(5) << endl;
+    //cout <<" lp.x.at(5):"<< lp.x.at(345) << endl;
+    
+    cout << " Optimum: "<< lp.optimum() << endl;
 
 }
 
 
 int main() {
+   
+    cout<<"-----------++++++++++++++++----------------++++++++++++++++---------------------"<<endl;
 
-cout<<"Launching function main"<<endl;
+    initSetOfLocations();
+    initPriors();
+    assignVariables();
+    solve();
 
-initSetOfLocations();
-initPriors();
-assignVariables();
-solve();
-
-cout<<"END!"<<endl;
+    cout<<"END!"<<endl;
+    cout<<"================================================================================"<<endl;
 
 }
-

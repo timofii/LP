@@ -8,7 +8,8 @@
 using namespace qif;
 using namespace std;
 
-const static int n = 81;
+const static int n = 49;
+const static double epsilon = 2.0;
 
 typedef qif::MatrixEntry<double> ME;
 
@@ -60,6 +61,7 @@ cout << "NUMBER OF POINTS:" << n << endl;
 
 void assignVariables(){
 
+  int number = 0;
   int counter = 0;
   int n2 = n*n;
   int n3 = n2*n;
@@ -79,9 +81,18 @@ void assignVariables(){
                 
                 if(i!=k){
                     counter++;
-					entries.push_back(ME((n2*k) + (n*i) + j, (n*i) + j, 1));
-					entries.push_back(ME((n2*k) + (n*i) + j, (n*k) + j, -exp(distance(listOfPoints[i],listOfPoints[k]))));
-                    
+                    if(distance(listOfPoints[i],listOfPoints[j]) < log(100.0))//Threshold
+                    {
+                        entries.push_back(ME((n2*k) + (n*i) + j, (n*i) + j, 1));
+                    //cout << "EXP:" << distance(listOfPoints[i],listOfPoints[k]) << endl;
+                        entries.push_back(ME((n2*k) + (n*i) + j, (n*k) + j, -exp(epsilon * distance(listOfPoints[i],listOfPoints[k]))));//entries.push_back(ME((n2*k) + (n*i) + j, (n*k) + j, -exp(distance(listOfPoints[i],listOfPoints[k]))));
+                    }
+                    else
+                    {
+                        number++;
+                        //entries.push_back(ME((n2*k) + (n*i) + j, (n*i) + j, 0));
+                        //entries.push_back(ME((n2*k) + (n*i) + j, (n*k) + j, 0));
+                    }
                     lp.sense((n2*k)+ (n*i) + j) = '<';
                     lp.b((n2*k)+ (n*i) + j) = 0;
                 }
@@ -96,7 +107,7 @@ void assignVariables(){
 			
 		}
 	}
-    
+    cout << "____number___ " << number << endl;
     for ( int i = n3; i < n3 + n ; i++) {
         counter++;
         for (int j = 0; j < n; ++j) {
@@ -118,7 +129,7 @@ void solve(){
     lp.maximize = false;
     // methods: simplex_primal, simplex_dual, interior
     lp.method = LinearProgram<double>::method_t::simplex_primal;
-    cout <<" Method: "<< "simplex_primal" << endl;
+    cout <<" Method: "<< "interior" << endl;
     
     cout <<" A.n_rows: "<< lp.A.n_rows << endl;
     cout <<" b.n_elem: "<< lp.b.n_elem << endl;
@@ -158,3 +169,4 @@ int main() {
     cout<<"================================================================================"<<endl;
 
 }
+

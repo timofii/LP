@@ -5,13 +5,13 @@
 #include <list>
 #include <time.h>
 
-using namespace qif;
+using namespace qif::lp;
 using namespace std;
 
 const static int n = 49;
 const static double epsilon = 2.0;
 
-typedef qif::MatrixEntry<double> ME;
+typedef MatrixEntry<double> ME;
 
 struct point2 {
 		int x;
@@ -127,9 +127,11 @@ void assignVariables(){
 void solve(){
 
     lp.maximize = false;
-    // methods: simplex_primal, simplex_dual, interior
-    lp.method = LinearProgram<double>::method_t::simplex_primal;
-    cout <<" Method: "<< "interior" << endl;
+    // methods: simplex_primal, simplex_dual (default), interior
+    lp.method = method_t::simplex_dual;
+	lp.glp_msg_level = msg_level_t::all;
+	lp.glp_presolve = true;
+    cout <<" Method: "<< lp.method << endl;
     
     cout <<" A.n_rows: "<< lp.A.n_rows << endl;
     cout <<" b.n_elem: "<< lp.b.n_elem << endl;

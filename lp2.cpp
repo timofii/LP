@@ -159,8 +159,29 @@ void solve(){
 
 }
 
+int kostas() {
+
+	Defaults::glp_msg_level = msg_level_t::all;
+
+	uint width = std::sqrt(n);
+
+	auto d_euclid = qif::metric::grid<double>(width);
+	auto d_priv = epsilon * d_euclid;
+	auto d_loss = d_euclid;
+
+	qif::prob pi = qif::probab::uniform<double>(n);
+
+	qif::chan opt = qif::mechanism::optimal_utility(pi, n, d_priv, d_loss);
+
+	std::cout << "size: " << opt.n_elem << "\n";
+	std::cout << "Pr(0 | 0) = " << opt.at(0, 0) << "\n";
+
+	return 0;
+}
+
 
 int main() {
+//	return kostas();
    
     cout<<"-----------++++++++++++++++----------------++++++++++++++++---------------------"<<endl;
 

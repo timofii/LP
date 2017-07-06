@@ -81,7 +81,8 @@ void assignVariables(){
                 
                 if(i!=k){
                     counter++;
-                    if(distance(listOfPoints[i],listOfPoints[j]) < log(100.0))//Threshold
+					// NOTE: the threshold should include epsilon!!!
+                    if(epsilon * distance(listOfPoints[i],listOfPoints[j]) < std::log(1e200))//Threshold
                     {
                         entries.push_back(ME((n2*k) + (n*i) + j, (n*i) + j, 1));
                     //cout << "EXP:" << distance(listOfPoints[i],listOfPoints[k]) << endl;
@@ -98,6 +99,7 @@ void assignVariables(){
                 }
                 else
                 {
+					// Kostas: what is this?
                     counter++;
                     entries.push_back(ME((n2*k) + (n*i) + j, (n*i) + j, 0));
                     lp.sense((n2*k)+ (n*i) + j) = '=';

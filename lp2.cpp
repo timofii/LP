@@ -10,7 +10,7 @@ using namespace std;
 
 const static int n = 49;
 const static int n2 = n*n;
-const static double epsilon = 2.0;
+const static double epsilon = 1.0;
 
 typedef MatrixEntry<double> ME;
 
@@ -113,7 +113,7 @@ void solve(){
     cout << " TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT " << endl;
     lp.maximize = false;
     // methods: simplex_primal, simplex_dual (default), interior
-    lp.method = method_t::simplex_dual;
+    lp.method = method_t::simplex_primal;
 	lp.glp_msg_level = msg_level_t::all;
 	lp.glp_presolve = true;
     cout << "===================================" << endl;
@@ -143,6 +143,10 @@ void solve(){
     cout << " Optimum: "<< lp.optimum() << endl;
     cout << " TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT " << endl;
 
+
+//	qif::chan C(rows, cols);
+
+
 }
 
 int kostas() {
@@ -160,7 +164,7 @@ int kostas() {
 	auto d_euclid = qif::metric::grid<double>(width);
 	auto d_priv = epsilon * d_euclid;
 	auto d_loss = d_euclid;
-	double threshold = std::log(1e200);
+	double threshold = 1e200;
 
 	qif::prob pi = qif::probab::uniform<double>(n);
 
@@ -169,6 +173,8 @@ int kostas() {
 	std::cout << "size: " << opt.n_elem << "\n";
 	std::cout << "Pr(0 | 0) = " << opt.at(0, 0) << "\n";
 	std::cout << "utility: " << qif::utility::expected_distance(d_loss, pi, opt) << "\n";
+	cout << "actual epsilon: " << qif::mechanism::smallest_epsilon(opt, d_priv) << "\n";
+	cout << "is proper: " << qif::channel::is_proper(opt) << "\n";
 
 
     	std::cout << "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK" << endl;
@@ -177,7 +183,7 @@ int kostas() {
 
 
 int main() {
-//	return kostas();
+return kostas();
    
     cout<<"-----------++++++++++++++++----------------++++++++++++++++---------------------"<<endl;
 

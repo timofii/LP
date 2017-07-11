@@ -9,6 +9,7 @@ using namespace qif::lp;
 using namespace std;
 
 const static int n = 49;
+const static int n2 = n*n;
 const static double epsilon = 2.0;
 
 typedef MatrixEntry<double> ME;
@@ -61,66 +62,47 @@ cout << "NUMBER OF POINTS:" << n << endl;
 
 void assignVariables(){
 
-  int number = 0;
-  int counter = 0;
-  int n2 = n*n;
-  int n3 = n2*n;
-
-    
-    lp.c.set_size(n2);
-    lp.b.set_size(n3 + n);
-    lp.sense.set_size(n3 + n);
+int counter = 0;
+    lp.c.set_size( n2 );
     
 	for(int i = 0; i < n; i++){
 		for(int j = 0; j < n; j++){
-
-            lp.c(n*i + j) = Pi[i] * distance(listOfPoints[i],listOfPoints[j]);
-            //cout << "vvvv:" << Pi[i] * distance(listOfPoints[i],listOfPoints[j]) << " :: "<<n*i + j<< endl;
-			//entries.push_back(ME( n3 ,(n*i) + j, 1));
-			for(int k = 0; k < n; k++){
-                
+        
+            lp.c( n*i  + j) = Pi[i] * distance(listOfPoints[i],listOfPoints[j]);
+            for(int k = 0; k < n; k++){
                 if(i!=k){
-                    counter++;
-					// NOTE: the threshold should include epsilon!!!
-                    if(epsilon * distance(listOfPoints[i],listOfPoints[j]) < std::log(1e200))//Threshold
-                    {
-                        entries.push_back(ME((n2*k) + (n*i) + j, (n*i) + j, 1));
-                    //cout << "EXP:" << distance(listOfPoints[i],listOfPoints[k]) << endl;
-                        entries.push_back(ME((n2*k) + (n*i) + j, (n*k) + j, -exp(epsilon * distance(listOfPoints[i],listOfPoints[k]))));//entries.push_back(ME((n2*k) + (n*i) + j, (n*k) + j, -exp(distance(listOfPoints[i],listOfPoints[k]))));
-                    }
-                    else
-                    {
-                        number++;
-                        //entries.push_back(ME((n2*k) + (n*i) + j, (n*i) + j, 0));
-                        //entries.push_back(ME((n2*k) + (n*i) + j, (n*k) + j, 0));
-                    }
-                    lp.sense((n2*k)+ (n*i) + j) = '<';
-                    lp.b((n2*k)+ (n*i) + j) = 0;
-                }
-                else
-                {
-					// Kostas: what is this?
-                    counter++;
-                    entries.push_back(ME((n2*k) + (n*i) + j, (n*i) + j, 0));
-                    lp.sense((n2*k)+ (n*i) + j) = '=';
-                    lp.b((n2*k)+ (n*i) + j) = 0;
+                    //if((epsilon * distance( listOfPoints[i],listOfPoints[j])) < std::log(1e200))
+                    //{
+                        counter++;
+                        entries.push_back(ME(counter, (n*i) + j, 1));
+                        entries.push_back(ME(counter, (n*k) + j, -exp(epsilon * distance(listOfPoints[i],listOfPoints[k]))));
+                    //}
+                    
                 }
 			}
 			
 		}
 	}
-    cout << "____number___ " << number << endl;
-    for ( int i = n3; i < n3 + n ; i++) {
-        counter++;
+    
+    for ( int i = counter; i < counter + n ; ++i) {
         for (int j = 0; j < n; ++j) {
-            entries.push_back(ME( i , (n * (i - n3)) + j , 1));
+            entries.push_back(ME( i , (n * (i - counter)) + j , 1));
         }
+    }
+
+    lp.b.set_size(counter + n);
+    lp.sense.set_size(counter + n);
+    
+    for (int i = 0; i < counter; ++i) {
+        lp.sense(i) = '<';
+        lp.b(i) = 0;
+    }
+    
+    for (int i = counter; i < counter + n; ++i) {
         lp.b(i) = 1;
         lp.sense(i) = '=';
     }
- 
-    cout << "NUMBER OF CONSTRAINTS: " << counter<< endl;
-    cout << "VARIABLES: " << n2 << endl;
+    
     lp.fill_A(entries);
 
 }
@@ -128,12 +110,15 @@ void assignVariables(){
 
 void solve(){
 
+    cout << " TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT " << endl;
     lp.maximize = false;
     // methods: simplex_primal, simplex_dual (default), interior
     lp.method = method_t::simplex_dual;
 	lp.glp_msg_level = msg_level_t::all;
 	lp.glp_presolve = true;
+    cout << "===================================" << endl;
     cout <<" Method: "<< lp.method << endl;
+    cout << "===================================" << endl;
     
     cout <<" A.n_rows: "<< lp.A.n_rows << endl;
     cout <<" b.n_elem: "<< lp.b.n_elem << endl;
@@ -156,13 +141,20 @@ void solve(){
     //cout <<" lp.x.at(5):"<< lp.x.at(345) << endl;
     
     cout << " Optimum: "<< lp.optimum() << endl;
+    cout << " TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT " << endl;
 
 }
 
 int kostas() {
-
+	std::cout << "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK" << endl;
+	
 	Defaults::glp_msg_level = msg_level_t::all;
-
+		//Timo: set the method for solver
+	Defaults::method = method_t::simplex_primal;
+	std::cout << "===================================" << endl;
+    	std::cout <<" Method: "<< Defaults::method << endl;
+    	std::cout << "===================================" << endl;
+	
 	uint width = std::sqrt(n);
 
 	auto d_euclid = qif::metric::grid<double>(width);
@@ -178,6 +170,8 @@ int kostas() {
 	std::cout << "Pr(0 | 0) = " << opt.at(0, 0) << "\n";
 	std::cout << "utility: " << qif::utility::expected_distance(d_loss, pi, opt) << "\n";
 
+
+    	std::cout << "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK" << endl;
 	return 0;
 }
 

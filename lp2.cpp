@@ -175,6 +175,7 @@ int kostas() {
 
 	std::cout << "size: " << opt.n_elem << "\n";
 	std::cout << "Pr(0 | 0) = " << opt.at(0, 0) << "\n";
+	std::cout << "utility: " << qif::utility::expected_distance(d_loss, pi, opt) << "\n";
 
 	return 0;
 }

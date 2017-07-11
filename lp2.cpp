@@ -73,9 +73,9 @@ int counter = 0;
                 if(i!=k){
                     //if((epsilon * distance( listOfPoints[i],listOfPoints[j])) < std::log(1e200))
                     //{
-                        counter++;
                         entries.push_back(ME(counter, (n*i) + j, 1));
                         entries.push_back(ME(counter, (n*k) + j, -exp(epsilon * distance(listOfPoints[i],listOfPoints[k]))));
+			counter++;
                     //}
                     
                 }

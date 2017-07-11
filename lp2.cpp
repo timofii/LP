@@ -168,10 +168,11 @@ int kostas() {
 	auto d_euclid = qif::metric::grid<double>(width);
 	auto d_priv = epsilon * d_euclid;
 	auto d_loss = d_euclid;
+	double threshold = std::log(1e200);
 
 	qif::prob pi = qif::probab::uniform<double>(n);
 
-	qif::chan opt = qif::mechanism::optimal_utility(pi, n, d_priv, d_loss);
+	qif::chan opt = qif::mechanism::optimal_utility(pi, n, d_priv, d_loss, threshold);
 
 	std::cout << "size: " << opt.n_elem << "\n";
 	std::cout << "Pr(0 | 0) = " << opt.at(0, 0) << "\n";

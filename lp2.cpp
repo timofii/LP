@@ -8,7 +8,7 @@
 using namespace qif::lp;
 using namespace std;
 
-const static int n = 49;
+const static int n = 64;
 const static int n2 = n*n;
 const static double epsilon = 1.0;
 
@@ -32,12 +32,22 @@ double distance(point2 i, point2 j){
     
 }
 
+double computing_delta(double ro, double R)
+{
+    if(ro != 0.0){
+        cout << "R = " << R << " ro =" << ro << endl;
+        return (R/ro)/((R/ro) + 2) ;
+        //return ((R/ro) + 2) / (R/ro) ;
+    }
+    else{
+        cout << "Can not compute delta: ro = 0" << endl;
+        return 0.0;
+    }
+}
+
 void initPriors(){
-    //    cout<< "Priors:" << endl;
-    for(int i = 0; i< n; i++)
-    {
+    for(int i = 0; i< n; i++){
         Pi[i] = 1.0/n;
-        //        cout<< Pi[i] << endl;
     }
     
 }
@@ -59,11 +69,17 @@ void initSetOfLocations(){
     
 }
 
+//variable KostasMethod make a switch between Direct and Kostas method with parameters ro and R
+//true to run Kostas method false to run Direct
+//As Catuscia mentioned I have put delta = sqrt(2)/2 in her email to all of us
+//before was computation of delta according the formula therefore parameter ro is not in use 
+void assignVariables(bool KostasMethod , double ro, double R){
 
-void assignVariables(){
-    
     int counter = 0;
     lp.c.set_size( n2 );
+
+    double delta = sqrt(2)/2;//computing_delta(ro,R);
+    cout << "DELTA * EPS: "<< delta * epsilon << endl;
     
     for(int i = 0; i < n; i++){
         for(int j = 0; j < n; j++){
@@ -73,10 +89,20 @@ void assignVariables(){
                 if(i!=k){
                     //if((epsilon * distance( listOfPoints[i],listOfPoints[j])) < std::log(1e200))
                     //{
-                    
-                    entries.push_back(ME(counter, (n*i) + j, 1));
-                    entries.push_back(ME(counter, (n*k) + j, -exp(epsilon * distance(listOfPoints[i],listOfPoints[k]))));
-                    counter++;
+                    if( KostasMethod )
+                    {
+                        if(distance(listOfPoints[i],listOfPoints[k]) <= R){
+                            entries.push_back(ME(counter, (n*i) + j, 1));
+                            entries.push_back(ME(counter, (n*k) + j, -exp( delta * epsilon * distance(listOfPoints[i],listOfPoints[k]))));
+                            counter++;
+                        }
+                    }
+                    else
+                    {
+                        entries.push_back(ME(counter, (n*i) + j, 1));
+                        entries.push_back(ME(counter, (n*k) + j, -exp(epsilon * distance(listOfPoints[i],listOfPoints[k]))));
+                        counter++;
+                    }
                     //}
                     
                 }
@@ -138,6 +164,7 @@ void solve(){
     //cout << "Solve:" << solved << endl;
     //cout << endl;
     
+    //Only to check the correctness of the optimal solution
     qif::chan opt(n,n);
     for(int i = 0; i < n; ++i){
         for(int j = 0; j < n; ++j){
@@ -205,7 +232,8 @@ int main() {
     
     initSetOfLocations();
     initPriors();
-    assignVariables();
+    assignVariables(true, 0.0 ,6.5);//,4);//////
+    
     solve();
     
     cout<<"END!"<<endl;
